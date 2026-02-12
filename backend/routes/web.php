@@ -12,7 +12,12 @@ use App\Http\Controllers\Admin\BadgeController;
 use App\Http\Controllers\Admin\AchievementController;
 use App\Http\Controllers\Admin\AttachmentController;
 
+// Serve React SPA from public/index.html when deployed with frontend build
 Route::get('/', function () {
+    $spa = public_path('index.html');
+    if (file_exists($spa)) {
+        return response()->file($spa);
+    }
     return view('welcome');
 });
 
@@ -55,4 +60,13 @@ Route::middleware(['auth', 'can:isAdmin', 'admin.locale'])->prefix('admin')->nam
     Route::post('/attachments', [AttachmentController::class, 'store'])->name('attachments.store');
     Route::delete('/attachments/{attachment}', [AttachmentController::class, 'destroy'])->name('attachments.destroy');
 });
+
+// SPA fallback: serve React app for frontend routes (e.g. /stage/1, /grade/2)
+Route::get('/{path}', function () {
+    $spa = public_path('index.html');
+    if (file_exists($spa)) {
+        return response()->file($spa);
+    }
+    abort(404);
+})->where('path', '^(?!admin|login|api|storage).*');
 
